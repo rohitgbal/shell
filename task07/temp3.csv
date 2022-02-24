@@ -1,0 +1,5 @@
+1,temp3.txt,temp2.txt,/home/rgb/shell/task07/t1/v,/home/rgb/shell/task07/t2/w
+1,temp2.txt,temp1.txt,/home/rgb/shell/task07/t2/w,/home/rgb/shell/task07/t3/x
+1,temp1.txt,temp0.txt,/home/rgb/shell/task07/t3/x,/home/rgb/shell/task07/t4/y
+1,temp0.txt,file.txt,/home/rgb/shell/task07/t4/y,/home/rgb/shell/task07/a/z
+1,file.txt,,/home/rgb/shell/task07/a/z,/home/rgb/shell/task07/

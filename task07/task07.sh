@@ -2,7 +2,7 @@
 #Execution ./task04.sh -f "<filename>" A/D OR ./task04.sh -s "<softlink>" A/D
 # @Author RGB 
 # @email rohitgbal@gmail.com
-# @Updated 22/02/2022
+# @Updated 24/02/2022
 
 # Default sorting set to Acsending order
 s_order=0
@@ -28,11 +28,12 @@ f_f=$(echo $f_f | cut -d "." -f 2- | cut -d "/" -f 2- )
 f_file=$f_f
 while((1))
 do
-loc=$(pwd)"/"$(echo $f_file | rev | cut -d "/" -f 2- | rev )
+f_loc=$(pwd)"/"$(echo $f_file | rev | cut -d "/" -f 2- | rev )
 file=$(echo $f_file | rev | cut -d "/" -f 1 | rev )
 f_file=$(find . -name "${file}" -printf "%l\n")
+l_loc=$(pwd)"/"$(echo $f_file | rev | cut -d "/" -f 2- | rev )
 link=$(echo $f_file | rev | cut -d "/" -f 1 | rev )
-echo $i,$file,$link,$loc >> tmp
+echo $i,$file,$link,$f_loc,$l_loc >> tmp
 if [ -z "$f_file" ]
 then
 break;
