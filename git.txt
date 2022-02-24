@@ -1,0 +1,9 @@
+git init
+git add *
+git commit -m "first commit"
+git branch -M main
+git remote add origin git@github.com:rohitgbal/shell.git
+git push -u origin main
+git config --global user.email "rohitgbal@gmail.com"
+git config --global user.name "rohitgbal"
+git push -u origin main
