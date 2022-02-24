@@ -1,0 +1,6 @@
+col1 int,
+col2 int,
+col3 varchar(10),
+col4 numeric(10,2),
+,col5 char(5),
+col6 Boolean,

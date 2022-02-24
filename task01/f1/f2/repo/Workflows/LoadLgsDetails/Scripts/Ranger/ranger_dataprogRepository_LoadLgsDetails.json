@@ -1,0 +1,2 @@
+{HIVE_CONFIG,"policyName":"prg1-${HDFS_ENV}-LgsDetails-Hive-PII-RX","databases":"${DB_NAME}","tables":"NCVDCX8_WIL_SUMM_ACID_VHR_HIST_SEC_HTE,NCVDCX8_WIL_SUMM_ACID_SEC_HTE","columns":"*","description":"prg1 Ranger policy to allow dataprog Repository Embedded transx PII Transformations for ALL Regions to access PII tables","permMapList":[{"groupList":["cvmremallp","cvmremapp","cvmremeup","cvmremmep","cvmremnan","cvmremnap","cvmremsap","cvmremukp","cvmremusp"],"permList":["select"]}]}
+

@@ -1,0 +1,2 @@
+${environment_hdfs_folder}/Workflow/lib
+/prg1Common.jar#prg1Common.jar${path_custom_jar_lib}/lib/itcore.jar#itcore.jar${environment_hdfs_folder}/Workflow/KEYS/prg1_jaas.conf#prg1_jaas.conf${kerberos_keytab_file}#${kerberos_keytab_filename},,,,,,,,,,

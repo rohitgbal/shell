@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5"
+	name="prg1${project}_${workflow}_${instance}_WF">
+
+	<global>
+		<job-tracker>${job_tracker}</job-tracker>
+		<name-node>${name_node}</name-node>
+		<configuration>
+			<property>
+				<name>mapreduce.job.queuename</name>
+				<value>${oozie_queue_name}</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+				<value>true</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.task.classpath.user.precedence</name>
+				<value>true</value>
+			</property>
+		</configuration>
+	</global>
+
+	<credentials>
+		<credential name="hiveCredentials" type="hive2">
+			<property>
+				<name>hive2.jdbc.url</name>
+				<value>${hive_beeline_server}</value>
+			</property>
+			<property>
+				<name>hive2.server.principal</name>
+				<value>${hive_kerberos_principal}</value>
+			</property>
+		</credential>
+		<credential name="hbaseCredentials" type="hbase">
+		</credential>
+	</credentials>
+
+	<start to="CleanUp_AXT_Staging_Table" />
+
+	<action name="CleanUp_AXT_Staging_Table" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<prepare>
+				<delete path="${output}" />
+				<mkdir path="${output}" />
+			</prepare>
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_workflow_root}/drop_staging_partitions.ql
+			</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>stg_table_name=${stg_table}</param>
+		</hive2>
+		<ok to="CleanUp_AXT_Mntr_Staging_Table" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+
+	<action name="CleanUp_AXT_Mntr_Staging_Table">
+		<fs>
+			<delete path="${monitoring_staging_location}" />
+			<mkdir path="${monitoring_staging_location}" />
+		</fs>
+		<ok to="Get_CRC4T_Data_AXT_Reload" />
+		<error to="Capture_Failure_reccalc" />
+
+	</action>
+
+	<action name="Get_CRC4T_Data_AXT_Reload">
+		<shell xmlns="uri:oozie:shell-action:0.3">
+			<exec>AXTReloadtransform.sh</exec>
+			<argument>${spark_master}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_max_executors}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${spark_executor_cores}</argument>
+			<argument>${output}</argument>
+			<argument>${hive_database_name}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+			<argument>${kerberos_principal}</argument>
+			<argument>${current_user}</argument>
+			<argument>${lkb_days}</argument>
+			<argument>${source_table}</argument>
+			<argument>${current_date}</argument>
+			<argument>${start_date}</argument>
+			<argument>${assembly_jar}</argument>
+			<argument>${hive_jdbc_url}</argument>
+			<file>${path_hdfs_project}/AXTReloadtransform.sh#AXTReloadtransform.sh
+			</file>
+			<file>${path_hdfs_project}/AXTReloadtransform.py#AXTReloadtransform.py
+			</file>
+			<file>${path_hdfs_project}/AXTReloadtransform_script.sql#AXTReloadtransform_script.sql
+			</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</shell>
+		<ok to="Load_To_Master" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+	<action name="Load_To_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/loadToMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table_name=${mstr_tbl}</param>
+			<param>stg_table_name=${stg_table}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>current_date=${current_date}</param>
+		</hive2>
+		<ok to="Load_Daily_Mntr_Stg_Load" />
+		<error to="Capture_Failure_reccalc" />
+
+	</action>
+	<action name="Load_Daily_Mntr_Stg_Load" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/AXT_Monitoring_stage.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>stg_table=${stg_table}</param>
+			<param>monitoring_staging=${monitoring_staging}</param>
+		</hive2>
+		<ok to="Load_Daily_Mntr_Master_Load" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+	<action name="Load_Daily_Mntr_Master_Load" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/LoadAXTMonitorMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>monitoring_master=${monitoring_master}</param>
+			<param>monitoring_staging=${monitoring_staging}</param>
+			<param>currentUser=${current_user}</param>
+		</hive2>
+		<ok to="Load_VHA" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+	<decision name="Load_VHA">
+		<switch>
+			<case to="AXTsummary_Trigger_File">${vha_load_OIC eq 'no'}</case>
+			<default to="Load_VHA_Daily_Load" />
+		</switch>
+	</decision>
+
+	<action name="Load_VHA_Daily_Load" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/VHAscript.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>current_date=${current_date}</param>
+		</hive2>
+		<ok to="AXTsummary_Trigger_File" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+	<action name="AXTsummary_Trigger_File">
+		<fs>
+			<mkdir path="${path_hdfs_dataset}/${mstr_tbl}/${dataset_date}/" />
+		</fs>
+		<ok to="end" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+
+
+	<action name="Capture_Failure_reccalc">
+		<java>
+			<main-class>${reccalc_driver_class}</main-class>
+			<java-opts>-Dsun.security.krb5.debug=true</java-opts>
+			<arg>reccalcClass=${reccalc_calculator_class}</arg>
+			<arg>fileType=${reccalc_file_type}</arg>
+			<arg>workflowId=${wf:id()}</arg>
+			<arg>workflowName=${workflow}</arg>
+			<arg>userName=${current_user}</arg>
+			<arg>workflowFailure=True</arg>
+			<arg>failedStep=${wf:lastErrorNode()}</arg>
+			<file>${path_custom_jar_lib}/prg1Common.jar#prg1Common.jar</file>
+			<file>${path_custom_jar_lib}/lib/itcore.jar#itcore.jar</file>
+			<file>${environment_hdfs_folder}/Workflow/KEYS/prg1_jaas.conf#prg1_jaas.conf</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</java>
+		<ok to="fail" />
+		<error to="fail" />
+	</action>
+
+
+	<kill name="fail">
+		<message>Script failed, error
+			message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+	</kill>
+
+	<end name='end' />
+
+</workflow-app>
+

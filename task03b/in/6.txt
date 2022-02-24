@@ -1,0 +1,78 @@
++--------------------------------------+----------------------------------------------------+-----------------------------+
+|               col_name               |                     data_type                      |           comment           |
++--------------------------------------+----------------------------------------------------+-----------------------------+
+| jcdtea_vin_d_2                       | string                                             |                             |
+| jcdtea_number_r_2                  | int                                                |                             |
+| jcdtea_lat_r_2                       | double                                             |                             |
+| jcdtea_lon_r_2                       | double                                             |                             |
+| jcdtea_park_begin_s_2                | timestamp                                          |                             |
+| jcdtea_park_end_s_2                  | timestamp                                          |                             |
+| jcdtea_vehicle_desc_x_2              | varchar(60)                                        |                             |
+| jcdtea_park_id_x_2                   | string                                             |                             |
+| jcdtea_suspect_flag_r_2              | int                                                |                             |
+| jcdtea_park_duration_r_2             | double                                             |                             |
+| jcdtea_trip_park_id_x_2              | string                                             |                             |
+| jcdtea_charge_src_x_2                | string                                             |                             |
+| jcdtea_charge_is_deep_sleep_r_2      | int                                                |                             |
+| jcdtea_charge_id_x_2                 | string                                             |                             |
+| jcdtea_charge_min_soc_r_2            | double                                             |                             |
+| jcdtea_charge_max_soc_r_2            | double                                             |                             |
+| jcdtea_soc_delta_r_2                 | double                                             |                             |
+| jcdtea_charge_min_engy_r_2           | int                                                |                             |
+| jcdtea_charge_max_engy_r_2           | int                                                |                             |
+| jcdtea_charge_engy_delta_r_2         | int                                                |                             |
+| jcdtea_charge_begin_s_2              | timestamp                                          |                             |
+| jcdtea_charge_end_s_2                | timestamp                                          |                             |
+| jcdtea_charge_duration_r_2           | double                                             |                             |
+| jcdtea_charge_max_chrg_pwr_r_2       | int                                                |                             |
+| jcdtea_charge_max_chrg_pwr_mode_r_2  | int                                                |                             |
+| jcdtea_charge_pwr_typ_r_2            | int                                                |                             |
+| jcdtea_charge_plug_id_x_2            | string                                             |                             |
+| jcdtea_charge_plug_in_s_2            | timestamp                                          |                             |
+| jcdtea_charge_plug_out_s_2           | timestamp                                          |                             |
+| jcdtea_charge_plug_durn_r_2          | double                                             |                             |
+| jcdtea_charge_shrt_chrg_r_2          | int                                                |                             |
+| jcdtea_charge_long_chrg_r_2          | int                                                |                             |
+| jcdtea_charge_in_crct_transx_r_2      | int                                                |                             |
+| jcdtea_created_on_s                  | timestamp                                          |                             |
+| jcdtea_created_by_c                  | varchar(10)                                        |                             |
+|                                      | NULL                                               | NULL                        |
+| # Partition Information              | NULL                                               | NULL                        |
+| # col_name                           | data_type                                          | comment                     |
+| jcdtea_partition_region_x            | string                                             |                             |
+| jcdtea_partition_country_x           | string                                             |                             |
+| jcdtea_partition_date_x              | string                                             |                             |
+|                                      | NULL                                               | NULL                        |
+| # Detailed Table Information         | NULL                                               | NULL                        |
+| Database:                            | prg1                                               | NULL                        |
+| OwnerType:                           | USER                                               | NULL                        |
+| Owner:                               | prg1devp                                           | NULL                        |
+| CreateTime:                          | Thu Dec 03 23:53:25 EST 2020                       | NULL                        |
+| LastAccessTime:                      | UNKNOWN                                            | NULL                        |
+| Retention:                           | 0                                                  | NULL                        |
+| Location:                            | hdfs://hdd3cluster/project/prg1/prg1DEV/buckst/barred/storage/njcdtea_tcu4g_smart_charge_summ_pj1_pii_hte | NULL                        |
+| Table Type:                          | MANAGED_TABLE                                      | NULL                        |
+| Table Parameters:                    | NULL                                               | NULL                        |
+|                                      | COLUMN_STATS_ACCURATE                              | {\"BASIC_STATS\":\"true\"}  |
+|                                      | bucketing_version                                  | 2                           |
+|                                      | compactorthreshold.hive.compactor.delta.num.threshold | 1                           |
+|                                      | compactorthreshold.hive.compactor.delta.pct.threshold | 0.5                         |
+|                                      | numFiles                                           | 296                         |
+|                                      | numPartitions                                      | 294                         |
+|                                      | numRows                                            | 3000                        |
+|                                      | orc.compress.size                                  | 8192                        |
+|                                      | rawDataSize                                        | 0                           |
+|                                      | totalSize                                          | 1403832                     |
+|                                      | transactional                                      | true                        |
+|                                      | transactional_properties                           | default                     |
+|                                      | transient_lastDdlTime                              | 1607057605                  |
+|                                      | NULL                                               | NULL                        |
+| # Storage Information                | NULL                                               | NULL                        |
+| SerDe Library:                       | org.apache.hadoop.hive.ql.io.orc.OrcSerde          | NULL                        |
+| InputFormat:                         | org.apache.hadoop.hive.ql.io.orc.OrcInputFormat    | NULL                        |
+| OutputFormat:                        | org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat   | NULL                        |
+| Compressed:                          | No                                                 | NULL                        |
+| Num Buckets:                         | 10                                                 | NULL                        |
+| Bucket Columns:                      | [jcdtea_vin_d_2]                                   | NULL                        |
+| Sort Columns:                        | []                                                 | NULL                        |
++--------------------------------------+----------------------------------------------------+-----------------------------+

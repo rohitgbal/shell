@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="prg1${project}_${workflow}_${instance}_WF">
+
+	<global>
+		<job-tracker>${job_tracker}</job-tracker>
+		<name-node>${name_node}</name-node>
+		<configuration>
+			<property>
+				<name>mapreduce.job.queuename</name>
+				<value>${oozie_queue_name}</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+				<value>true</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.task.classpath.user.precedence</name>
+				<value>true</value>
+			</property>
+		</configuration>
+	</global>
+
+	<credentials>
+		<credential name="hiveCredentials" type="hive2">
+			<property>
+				<name>hive2.jdbc.url</name>
+				<value>${hive_beeline_server}</value>
+			</property>
+			<property>
+				<name>hive2.server.principal</name>
+				<value>${hive_kerberos_principal}</value>
+			</property>
+		</credential>
+		<credential name="hbaseCredentials" type="hbase">
+		</credential>
+	</credentials>
+
+	<start to="HistoryOrDailyLoadCheck" />
+
+	<decision name="HistoryOrDailyLoadCheck">
+		<switch>
+			<case to="PJ1_Select_Un1_TempTable_DailyLoad">${workflow_type eq "pj1" and history_load eq "no"}</case>
+			<!--<default to="Regular_Select_Un1_TempTable_DailyLoad"/>-->
+			<default to="LoadH2T_DailyLoad"/>
+		</switch>
+	</decision>
+	<!-- ################### Start H2T Regular Daily Load ##############################-->
+
+	<action name="LoadH2T_DailyLoad" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<prepare>
+				<delete path="${tmp_output}"/>
+				<mkdir path="${tmp_output}"/>
+			</prepare>
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/repair_stage_table.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+		</hive2>
+		<ok to="Fork_Select" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<fork name = "Fork_Select">
+		<path start = "Select_Un1_TempTable"/>
+		<path start = "Select_Un2_TempTable"/>
+		<path start = "Select_Un1_TempTable_PRS"/>
+		<path start = "Select_Un2_TempTable_PRS"/>
+		<path start = "Select_Un1_TempTable_PSA"/>
+		<path start = "Select_Un2_TempTable_PSA"/>
+		<path start = "Select_Un1_TempTable_PSU"/>
+		<path start = "Select_Un2_TempTable_PSU"/>
+		<path start = "Select_Un3_TempTable"/>
+		<path start = "Select_Un4_TempTable"/>
+		<path start = "Select_Un5_TempTable"/>
+	</fork>
+
+	<action name="Select_Un1_TempTable" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un1_temp_overwrite.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>raw_table=${raw_k2_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Select_Un2_TempTable" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un2_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>J9D_table=${J9D_table}</param>
+			<param>raw_table=${raw_k2_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<!--start PRS Raw Table -->
+	<action name="Select_Un1_TempTable_PRS" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un1_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>raw_table=${raw_k2_prs_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Select_Un2_TempTable_PRS" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un2_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>J9D_table=${J9D_table}</param>
+			<param>raw_table=${raw_k2_prs_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+	<!--start PSU Raw Table -->
+	<action name="Select_Un1_TempTable_PSU" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un1_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>raw_table=${raw_k2_psu_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Select_Un2_TempTable_PSU" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un2_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>J9D_table=${J9D_table}</param>
+			<param>raw_table=${raw_k2_psu_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+	<!--start PSA Raw Table -->
+	<action name="Select_Un1_TempTable_PSA" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un1_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>raw_table=${raw_k2_psa_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Select_Un2_TempTable_PSA" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un2_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>J9D_table=${J9D_table}</param>
+			<param>raw_table=${raw_k2_psa_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<action name="Select_Un3_TempTable" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un3_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>mstr_na_usa_table=${mstr_na_usa_table}</param>
+			<param>mstr_na_non_usa_table=${mstr_na_non_usa_table}</param>
+			<param>mstr_eu_gbr_fra_table=${mstr_eu_gbr_fra_table}</param>
+			<param>mstr_eu_non_gbr_fra_table=${mstr_eu_non_gbr_fra_table}</param>
+			<param>mstr_ap_table=${mstr_ap_table}</param>
+			<param>mstr_rw_table=${mstr_rw_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Select_Un4_TempTable" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un4_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>mstr_na_usa_table=${mstr_na_usa_table}</param>
+			<param>mstr_na_non_usa_table=${mstr_na_non_usa_table}</param>
+			<param>mstr_eu_gbr_fra_table=${mstr_eu_gbr_fra_table}</param>
+			<param>mstr_eu_non_gbr_fra_table=${mstr_eu_non_gbr_fra_table}</param>
+			<param>mstr_ap_table=${mstr_ap_table}</param>
+			<param>mstr_rw_table=${mstr_rw_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Select_Un5_TempTable" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/select_un5_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>mstr_na_usa_table=${mstr_na_usa_table}</param>
+			<param>mstr_na_non_usa_table=${mstr_na_non_usa_table}</param>
+			<param>mstr_eu_gbr_fra_table=${mstr_eu_gbr_fra_table}</param>
+			<param>mstr_eu_non_gbr_fra_table=${mstr_eu_non_gbr_fra_table}</param>
+			<param>mstr_ap_table=${mstr_ap_table}</param>
+			<param>mstr_rw_table=${mstr_rw_table}</param>
+		</hive2>
+		<ok to="Join_Stage_Load" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<join name = "Join_Stage_Load" to = "LoadH2T_Staging_DailyLoad"/>
+
+
+	<action name="LoadH2T_Staging_DailyLoad">
+		<shell xmlns="uri:oozie:shell-action:0.3">
+			<prepare>
+				<delete path="${output}"/>
+				<mkdir path="${output}"/>
+			</prepare>
+			<exec>runH2T.sh</exec>
+			<argument>${spark_master}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_max_executors}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${spark_executor_cores}</argument>
+			<argument>${output}</argument>
+			<argument>${hive_database_name}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+			<argument>${kerberos_principal}</argument>
+			<argument>${current_user}</argument>
+			<argument>${current_date}</argument>
+			<argument>${lkb_days}</argument>
+			<argument>${history_load}</argument>
+			<argument>${temp_stg_table}</argument>
+			<file>${path_hdfs_project}/runH2T.sh#runH2T.sh</file>
+			<file>${path_hdfs_project}/H2Ttransform.py#H2Ttransform.py</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</shell>
+		<ok to="Fork_Delete_From_Master" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<fork name = "Fork_Delete_From_Master">
+		<path start = "Delete_New_Partition_Status_From_Master_Daily"/>
+		<path start = "Delete_Old_Unknown_Data_From_Master_Daily"/>
+		<path start = "Delete_Old_Null_Data_From_Master_Daily"/>
+	</fork>
+
+	<action name="Delete_New_Partition_Status_From_Master_Daily" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/DeleteNewPartitionStatusFromMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_na_usa_table=${mstr_na_usa_table}</param>
+			<param>mstr_na_non_usa_table=${mstr_na_non_usa_table}</param>
+			<param>mstr_eu_gbr_fra_table=${mstr_eu_gbr_fra_table}</param>
+			<param>mstr_eu_non_gbr_fra_table=${mstr_eu_non_gbr_fra_table}</param>
+			<param>mstr_ap_table=${mstr_ap_table}</param>
+			<param>mstr_rw_table=${mstr_rw_table}</param>
+		</hive2>
+		<ok to="Join_Delete_From_Master" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<action name="Delete_Old_Unknown_Data_From_Master_Daily" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/DeleteOldUnknownDataFromMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_na_usa_table=${mstr_na_usa_table}</param>
+			<param>mstr_na_non_usa_table=${mstr_na_non_usa_table}</param>
+			<param>mstr_eu_gbr_fra_table=${mstr_eu_gbr_fra_table}</param>
+			<param>mstr_eu_non_gbr_fra_table=${mstr_eu_non_gbr_fra_table}</param>
+			<param>mstr_ap_table=${mstr_ap_table}</param>
+			<param>mstr_rw_table=${mstr_rw_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+		</hive2>
+		<ok to="Join_Delete_From_Master" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Delete_Old_Null_Data_From_Master_Daily" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/DeleteOldNullDataFromMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_na_usa_table=${mstr_na_usa_table}</param>
+			<param>mstr_na_non_usa_table=${mstr_na_non_usa_table}</param>
+			<param>mstr_eu_gbr_fra_table=${mstr_eu_gbr_fra_table}</param>
+			<param>mstr_eu_non_gbr_fra_table=${mstr_eu_non_gbr_fra_table}</param>
+			<param>mstr_ap_table=${mstr_ap_table}</param>
+			<param>mstr_rw_table=${mstr_rw_table}</param>
+		</hive2>
+		<ok to="Join_Delete_From_Master" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<join name = "Join_Delete_From_Master" to = "Fork_Load_To_Master"/>
+
+	<fork name = "Fork_Load_To_Master">
+		<path start = "Load_To_NA_USA_Master"/>
+		<path start = "Load_To_NA_Non_USA_Master"/>
+		<path start = "Load_To_EU_GBR_FRA_Master"/>
+		<path start = "Load_To_EU_Non_GBR_FRA_Master"/>
+		<path start = "Load_To_AP_Master"/>
+		<path start = "Load_To_RW_Master"/>
+	</fork>
+
+	<action name="Load_To_NA_USA_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/loadToMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_na_usa_table}</param>
+			<param>stg_table=${stg_table}</param>
+			<param>region='NA'</param>
+			<param>country='USA'</param>
+		</hive2>
+		<ok to="Join_Capture_Success_reccalc"/>
+		<error to="Failure_Notification" />
+	</action>
+
+	<action name="Load_To_NA_Non_USA_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/loadToMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_na_non_usa_table}</param>
+			<param>stg_table=${stg_table}</param>
+			<param>region='NA'</param>
+			<param>country='Non_USA'</param>
+		</hive2>
+		<ok to="Join_Capture_Success_reccalc"/>
+		<error to="Failure_Notification" />
+	</action>
+
+	<action name="Load_To_EU_GBR_FRA_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/loadToMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_eu_gbr_fra_table}</param>
+			<param>stg_table=${stg_table}</param>
+			<param>region='EU'</param>
+			<param>country='GBR_FRA'</param>
+		</hive2>
+		<ok to="Join_Capture_Success_reccalc"/>
+		<error to="Failure_Notification" />
+	</action>
+
+	<action name="Load_To_EU_Non_GBR_FRA_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/loadToMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_eu_non_gbr_fra_table}</param>
+			<param>stg_table=${stg_table}</param>
+			<param>region='EU'</param>
+			<param>country='Non_GBR_FRA'</param>
+		</hive2>
+		<ok to="Join_Capture_Success_reccalc"/>
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Load_To_AP_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/loadToMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_ap_table}</param>
+			<param>stg_table=${stg_table}</param>
+			<param>region='AP'</param>
+			<param>country=''</param>
+		</hive2>
+		<ok to="Join_Capture_Success_reccalc"/>
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Load_To_RW_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/loadToMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_rw_table}</param>
+			<param>stg_table=${stg_table}</param>
+			<param>region='RW'</param>
+			<param>country=''</param>
+		</hive2>
+		<ok to="Join_Capture_Success_reccalc"/>
+		<error to="Failure_Notification" />
+	</action>
+
+	<join name = "Join_Capture_Success_reccalc" to = "Capture_Success_reccalc"/>
+
+	<action name="Capture_Success_reccalc" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/success_reccalc.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_user=${kerberos_user_name}</param>
+			<param>workflowId=${wf:id()}</param>
+			<param>workflowName=${workflow}</param>
+			<param>reccalc_file_type=${reccalc_file_type}</param>
+			<param>mstr_na_usa_table=${mstr_na_usa_table}</param>
+			<param>mstr_na_non_usa_table=${mstr_na_non_usa_table}</param>
+			<param>mstr_eu_gbr_fra_table=${mstr_eu_gbr_fra_table}</param>
+			<param>mstr_eu_non_gbr_fra_table=${mstr_eu_non_gbr_fra_table}</param>
+			<param>mstr_ap_table=${mstr_ap_table}</param>
+			<param>mstr_rw_table=${mstr_rw_table}</param>
+			<param>stg_table=${stg_table}</param>
+			<param>reccalc_table=${reccalc_table}</param>
+		</hive2>
+		<ok to="end" />
+		<error to="Failure_Notification" />
+	</action>
+	<!-- ################### End H2T Regular Daily Load ##############################-->
+
+	<!-- ################### Start H2T PJ1 Daily Load ##############################-->
+
+	<action name="PJ1_Select_Un1_TempTable_DailyLoad" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/pj1_select_un1_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>pj1_k2_table=${pj1_k2_table}</param>
+		</hive2>
+		<ok to="PJ1_Select_Un2_TempTable" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="PJ1_Select_Un2_TempTable" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/pj1_select_un2_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_date=${current_date}</param>
+			<param>lkb_days=${lkb_days}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>J9D_table=${J9D_table}</param>
+			<param>pj1_k2_table=${pj1_k2_table}</param>
+		</hive2>
+		<ok to="PJ1_Select_Un3_TempTable" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="PJ1_Select_Un3_TempTable" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/pj1_select_un3_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>db_name=${hive_database_name}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>mstr_table=${mstr_table}</param>
+		</hive2>
+		<ok to="PJ1_Select_Un4_TempTable" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="PJ1_Select_Un4_TempTable" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/pj1_select_un4_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>db_name=${hive_database_name}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>mstr_table=${mstr_table}</param>
+		</hive2>
+		<ok to="PJ1_Select_Un5_TempTable" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="PJ1_Select_Un5_TempTable" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/pj1_select_un5_temp.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>db_name=${hive_database_name}</param>
+			<param>history_load=${history_load}</param>
+			<param>temp_stg_table=${temp_stg_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+			<param>mstr_table=${mstr_table}</param>
+		</hive2>
+		<ok to="LoadH2TPJ1_Staging_DailyLoad" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="LoadH2TPJ1_Staging_DailyLoad">
+		<shell xmlns="uri:oozie:shell-action:0.3">
+			<prepare>
+				<delete path="${output}"/>
+				<mkdir path="${output}"/>
+			</prepare>
+			<exec>runH2TPJ1.sh</exec>
+			<argument>${spark_master}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_max_executors}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${spark_executor_cores}</argument>
+			<argument>${output}</argument>
+			<argument>${hive_database_name}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+			<argument>${kerberos_principal}</argument>
+			<argument>${current_user}</argument>
+			<argument>${lkb_days}</argument>
+			<argument>${history_load}</argument>
+			<argument>${temp_stg_table}</argument>
+			<argument>${current_date}</argument>
+			<file>${path_hdfs_project}/runH2TPJ1.sh#runH2TPJ1.sh</file>
+			<file>${path_hdfs_project}/H2TPJ1transform.py#H2TPJ1transform.py</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</shell>
+		<ok to="Delete_New_Partition_Status_From_Master_DailyPJ1" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<action name="Delete_New_Partition_Status_From_Master_DailyPJ1" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/PJ1DeleteNewPartitionStatusFromMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_table}</param>
+		</hive2>
+		<ok to="Delete_Old_Unknown_Data_From_Master_DailyPJ1" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Delete_Old_Unknown_Data_From_Master_DailyPJ1" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/PJ1DeleteOldUnknownDataFromMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_table}</param>
+			<param>vin_meta_table=${vin_meta_table}</param>
+		</hive2>
+		<ok to="Delete_Old_Null_Data_From_Master_DailyPJ1"/>
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Delete_Old_Null_Data_From_Master_DailyPJ1" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/PJ1DeleteOldNullDataFromMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_table}</param>
+		</hive2>
+		<ok to="Load_To_Master_PJ1" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Load_To_Master_PJ1" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/PJ1LoadToMaster.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>mstr_table=${mstr_table}</param>
+			<param>stg_table=${stg_table}</param>
+		</hive2>
+		<ok to="Capture_Success_reccalc_PJ1" />
+		<error to="Failure_Notification" />
+	</action>
+	<action name="Capture_Success_reccalc_PJ1" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_project}/pj1_success_reccalc.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_user=${kerberos_user_name}</param>
+			<param>workflowId=${wf:id()}</param>
+			<param>workflowName=${workflow}</param>
+			<param>reccalc_file_type=${reccalc_file_type}</param>
+			<param>mstr_table=${mstr_table}</param>
+			<param>stg_table=${stg_table}</param>
+			<param>reccalc_table=${reccalc_table}</param>
+		</hive2>
+		<ok to="end" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<!-- ################### End H2T PJ1 Daily Load ##############################-->
+
+	<action name="Capture_Failure_reccalc">
+		<java>
+			<main-class>${reccalc_driver_class}</main-class>
+			<java-opts>-Dsun.security.krb5.debug=true</java-opts>
+			<arg>reccalcClass=${reccalc_calculator_class}</arg>
+			<arg>fileType=${reccalc_file_type}</arg>
+			<arg>workflowId=${wf:id()}</arg>
+			<arg>workflowName=${workflow}</arg>
+			<arg>userName=${current_user}</arg>
+			<arg>workflowFailure=True</arg>
+			<arg>failedStep=${wf:lastErrorNode()}</arg>
+			<file>${path_custom_jar_lib}/prg1Common.jar#prg1Common.jar</file>
+			<file>${path_custom_jar_lib}/lib/itcore.jar#itcore.jar</file>
+			<file>${environment_hdfs_folder}/Workflow/KEYS/prg1_jaas.conf#prg1_jaas.conf</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</java>
+		<ok to="Failure_Notification" />
+		<error to="Failure_Notification" />
+	</action>
+
+	<action name="Failure_Notification">
+		<email xmlns="uri:oozie:email-action:0.1">
+			<to>${email_recipient}</to>
+			<subject>${email_subject_failure} ${wf:id()}</subject>
+			<body>The workflow prg1${project}_${workflow}_WF (${wf:id()})
+				Failed in the ${wf:lastErrorNode()} process.
+
+				Please check the following logs for further details:
+				From Internet Explorer (Hadoop Hue): ${log_viewer1}/${wf:id()}// (Manually add the last '/' on the link above)
+
+				From FireFox (Hadoop Logs) with use of MIT Kerberos Ticket Manager:
+				${log_viewer2}/${wf:id()}?show=graph
+				${log_viewer3}/${wf:id()}
+
+				For more information on how to set-up MIT Kerberos for Windows Ticket
+				Manager:
+				click on http://www.NND.prdx.com/help/hadoop/odbc.html
+			</body>
+		</email>
+		<ok to="fail"/>
+		<error to="fail"/>
+	</action>
+
+	<kill name="fail">
+		<message>Script failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+	</kill>
+
+	<end name='end' />
+
+</workflow-app>

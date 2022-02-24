@@ -1,0 +1,4 @@
+{HIVE_CONFIG,"policyName":"prg1-${HDFS_ENV}-dataprogRepository-J9D PJ1 - Hive-LandMaster-LMI","databases":"${DB_NAME}","tables":"NSCVC92_J9D_PJ1_SEC_HTE,NSCVS92_J9D_PJ1_ST_HTE","columns":"*","description":"dataprogRepository J9D Hive PJ1  Access(LandMaster & LMI)","permMapList":[{"groupList":["prg1pdps","cvempj1lmi","cvempj1lm"],"permList":["select"]}]}
+
+{HDFS_CONFIG,"policyName":"prg1-${HDFS_ENV}-dataprogRepository-J9D PJ1 - HDFS-LandMaster-LMI","resourceName":"/project/prg1/prg1${HDFS_ENV}/Warehouse/Secure/dataprogRepository/nscvc92_J9D_pj1_sec_hte,/project/prg1/prg1${HDFS_ENV}/Warehouse/Staging/dataprogRepository/nscvs92_J9D_pj1_st_hte","description":"dataprogRepository J9D PJ1 HDFS  Access(LandMaster & LMI)","permMapList":[{"groupList":["prg1pdps","cvempj1lmi","cvempj1lm"],"permList":["read","execute"]}]}
+

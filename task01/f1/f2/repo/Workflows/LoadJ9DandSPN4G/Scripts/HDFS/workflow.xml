@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="prg1${project}_${workflow}_WF">
+	<global>
+		<job-tracker>${job_tracker}</job-tracker>
+		<name-node>${name_node}</name-node>
+		<configuration>
+			<property>
+				<name>mapreduce.job.queuename</name>
+				<value>${oozie_queue_name}</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+				<value>true</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.task.classpath.user.precedence</name>
+				<value>true</value>
+			</property>
+		</configuration>
+	</global>
+	<credentials>
+		<credential name="hiveCredentials" type="hive2">
+			<property>
+				<name>hive2.jdbc.url</name>
+				<value>${hive_beeline_server}</value>
+			</property>
+			<property>
+				<name>hive2.server.principal</name>
+				<value>${hive_kerberos_principal}</value>
+			</property>
+		</credential>
+
+		<credential name="hbaseCredentials" type="hbase">
+			<property>
+				<name>hadoop.security.authentication</name>
+				<value>kerberos</value>
+			</property>
+			<property>
+				<name>hbase.security.authentication</name>
+				<value>kerberos</value>
+			</property>
+			<property>
+				<name>hbase.master.kerberos.principal</name>
+				<value>hbase/XXXX@XXXX.COM</value>
+			</property>
+			<property>
+				<name>hbase.regionserver.kerberos.principal</name>
+				<value>hbase/XXXX@XXXX.COM</value>
+			</property>
+			<property>
+				<name>hbase.zookeeper.quorum</name>
+				<value>${zookeeper_quorum}</value>
+			</property>
+			<property>
+				<name>hadoop.rpc.protection</name>
+				<value>authentication</value>
+			</property>
+			<property>
+				<name>hbase.rpc.protection</name>
+				<value>authentication</value>
+			</property>
+		</credential>
+	</credentials>
+
+	<start to="Load_StrtgPartNo_Stage_From_CRC4T" />
+
+	<!-- <start to="Load_StrtgPartNo_Stage_From_TCUECGSYNC" /> -->
+
+	<action name="Load_StrtgPartNo_Stage_From_CRC4T">
+		<shell xmlns="uri:oozie:shell-action:0.3">
+			<prepare>
+				<delete path="${name_node}${path_hdfs_staging}/ncvdsul_pace_tcu_strat_part_no_st_hte"/>
+				<mkdir path="${name_node}${path_hdfs_staging}/ncvdsul_pace_tcu_strat_part_no_st_hte"/>
+			</prepare>
+			<exec>Load_CRC4TStrategyPartNo.sh</exec>
+			<argument>${hive_database_name}</argument>
+			<argument>${current_user}</argument>
+			<argument>${CRC4T_strgypartno_query_days}</argument>
+			<argument>${spark_master}</argument>
+			<argument>${spark_network_timeout}</argument>
+			<argument>${spark_ui_port}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_jars}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_num_executors}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${oozie_queue_name}</argument>
+			<argument>${spark_sql_shuffle_partitions}</argument>
+			<argument>${spark_sql_orc_filterPushdown}</argument>
+			<argument>${spark_executor_memoryOverhead}</argument>
+			<argument>${spark_core_connection_ack_wait_timeout}</argument>
+			<argument>${spark_task_maxfailures}</argument>
+			<argument>${spark_shuffle_io_maxRetries}</argument>
+			<argument>${spark_dynamicalLocation_enabled}</argument>
+			<argument>${spark_sql_orc_enabled}</argument>
+			<argument>${spark_sql_hive_convertMetaStoreOrc}</argument>
+			<argument>${spark_sql_orc_char_enabled}</argument>
+			<argument>${spark_files}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+			<argument>${kerberos_principal}</argument>
+			<argument>${current_date}</argument>
+			<argument>${spark_executor_cores}</argument>
+			<file>${path_hdfs_workflow_root}/Load_CRC4TStrategyPartNo.sh#Load_CRC4TStrategyPartNo.sh</file>
+			<file>${path_hdfs_workflow_root}/Load_CRC4TStrategyPartNo.py#Load_CRC4TStrategyPartNo.py</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</shell>
+		<ok to="Move_StrtgPartNo_Staging_To_Master" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+
+	<action name="Move_StrtgPartNo_Staging_To_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<prepare>
+				<delete path="${name_node}${path_hdfs_master_table}"/>
+				<mkdir path="${name_node}${path_hdfs_master_table}"/>
+			</prepare>
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_workflow_root}/Load_MasterSPNFromStg.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<file>${path_hdfs_workflow_root}/Load_MasterSPNFromStg.ql#Load_MasterSPNFromStg.ql</file>
+		</hive2>
+		<!-- <ok to="Empty_J9D_Hive_Staging" />
+		<error to="Capture_Failure_reccalc" /> -->
+		<ok to="Load_StrtgPartNo_Stage_From_TCUECGSYNC" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+	<action name="Load_StrtgPartNo_Stage_From_TCUECGSYNC">
+		<shell xmlns="uri:oozie:shell-action:0.3">
+			<prepare>
+				<delete path="${name_node}${path_hdfs_staging}/ncvdsul_pace_tcuecgsync_strat_part_no_st_hte"/>
+				<mkdir path="${name_node}${path_hdfs_staging}/ncvdsul_pace_tcuecgsync_strat_part_no_st_hte"/>
+			</prepare>
+			<exec>Load_StrategyPartNo_TCUECGSYNC.sh</exec>
+			<argument>${hive_database_name}</argument>
+			<argument>${current_user}</argument>
+			<argument>${CRC4T_strgypartno_query_days}</argument>
+			<argument>${spark_master}</argument>
+			<argument>${spark_network_timeout}</argument>
+			<argument>${spark_ui_port}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_jars}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_num_executors}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${oozie_queue_name}</argument>
+			<argument>${spark_sql_shuffle_partitions}</argument>
+			<argument>${spark_sql_orc_filterPushdown}</argument>
+			<argument>${spark_executor_memoryOverhead}</argument>
+			<argument>${spark_core_connection_ack_wait_timeout}</argument>
+			<argument>${spark_task_maxfailures}</argument>
+			<argument>${spark_shuffle_io_maxRetries}</argument>
+			<argument>${spark_dynamicalLocation_enabled}</argument>
+			<argument>${spark_sql_orc_enabled}</argument>
+			<argument>${spark_sql_hive_convertMetaStoreOrc}</argument>
+			<argument>${spark_sql_orc_char_enabled}</argument>
+			<argument>${spark_files}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+			<argument>${kerberos_principal}</argument>
+			<argument>${current_date}</argument>
+			<argument>${spark_executor_cores}</argument>
+			<file>${path_hdfs_workflow_root}/Load_StrategyPartNo_TCUECGSYNC.sh#Load_StrategyPartNo_TCUECGSYNC.sh</file>
+			<file>${path_hdfs_workflow_root}/Load_StrategyPartNo_TCUECGSYNC.py#Load_StrategyPartNo_TCUECGSYNC.py</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</shell>
+		<ok to="Move_StrtgPartNo_Staging_To_Master_TCUECGSYNC" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+	<action name="Move_StrtgPartNo_Staging_To_Master_TCUECGSYNC" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<prepare>
+				<delete path="${name_node}${path_hdfs_tcuecgsync_master_table}"/>
+				<mkdir path="${name_node}${path_hdfs_tcuecgsync_master_table}"/>
+			</prepare>
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_workflow_root}/Load_MasterSPNFromStgTCUECGSYNC.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<file>${path_hdfs_workflow_root}/Load_MasterSPNFromStgTCUECGSYNC.ql#Load_MasterSPNFromStgTCUECGSYNC.ql</file>
+		</hive2>
+		<ok to="Empty_J9D_Hive_Staging" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+	<action name="Empty_J9D_Hive_Staging" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<prepare>
+				<delete path="${name_node}${path_hdfs_staging_table}"/>
+			</prepare>
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_workflow_root}/EmptyJ9DHiveStaging.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>path_hdfs_staging_table=${path_hdfs_J9D_staging_table}</param>
+		</hive2>
+		<ok to="Load_J9D_Stage_From_CRC4T"/>
+		<error to="Capture_Failure_reccalc"/>
+	</action>
+
+	<action name="Load_J9D_Stage_From_CRC4T">
+		<shell xmlns="uri:oozie:shell-action:0.3">
+			<exec>Load_J9DStgFromCRC4T.sh</exec>
+			<argument>${hive_database_name}</argument>
+			<argument>${CRC4T_J9D_query_days}</argument>
+			<argument>${spark_master}</argument>
+			<argument>${spark_network_timeout}</argument>
+			<argument>${spark_ui_port}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_jars}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_num_executors}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${oozie_queue_name}</argument>
+			<argument>${spark_sql_shuffle_partitions}</argument>
+			<argument>${spark_sql_orc_filterPushdown}</argument>
+			<argument>${spark_executor_memoryOverhead}</argument>
+			<!-- <argument>${spark_yarn_executor_memoryOverhead}</argument> -->
+			<argument>${spark_core_connection_ack_wait_timeout}</argument>
+			<argument>${spark_task_maxfailures}</argument>
+			<argument>${spark_shuffle_io_maxRetries}</argument>
+			<argument>${spark_dynamicalLocation_enabled}</argument>
+			<argument>${spark_sql_orc_enabled}</argument>
+			<argument>${spark_sql_hive_convertMetaStoreOrc}</argument>
+			<argument>${spark_sql_orc_char_enabled}</argument>
+			<argument>${spark_files}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+			<argument>${kerberos_principal}</argument>
+			<argument>${output}</argument>
+			<argument>${spark_executor_cores}</argument>
+			<file>${path_hdfs_workflow_root}/Load_J9DStgFromCRC4T.sh#Load_J9DStgFromCRC4T.sh</file>
+			<file>${path_hdfs_workflow_root}/Load_J9DStgFromCRC4T.py#Load_J9DStgFromCRC4T.py</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</shell>
+		<ok to="Load_J9D_Master_From_Stg"/>
+		<error to="Capture_Failure_reccalc"/>
+	</action>
+
+	<action name="Load_J9D_Master_From_Stg" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_workflow_root}/Load_MasterJ9DFromStg.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_user=${kerberos_user_name}</param>
+			<param>CRC4T_J9D_processdays=${hive_CRC4T_J9D_processdays}</param>
+			<file>${path_hdfs_workflow_root}/Load_MasterJ9DFromStg.ql#Load_MasterJ9DFromStg.ql</file>
+		</hive2>
+		<ok to="Capture_reccalc" />
+		<error to="Capture_Failure_reccalc" />
+	</action>
+
+	<action name="Capture_reccalc">
+		<java>
+			<main-class>${reccalc_driver_class}</main-class>
+			<java-opts>-Dsun.security.krb5.debug=true</java-opts>
+			<arg>reccalcClass=${reccalc_calculator_class}</arg>
+			<arg>fileType=${source}</arg>
+			<arg>workflowId=${wf:id()}</arg>
+			<arg>workflowName=${workflow}</arg>
+			<arg>userName=${current_user}</arg>
+			<arg>workflowFailure=False</arg>
+			<file>${path_hdfs_prg1_lib}/prg1Common.jar</file>
+			<file>${path_hdfs_prg1_lib}/lib/itcore.jar</file>
+		</java>
+		<ok to="end"/>
+		<error to="Capture_Failure_reccalc"/>
+	</action>
+
+	<action name="Capture_Failure_reccalc">
+		<java>
+			<main-class>${reccalc_driver_class}</main-class>
+			<java-opts>-Dsun.security.krb5.debug=true</java-opts>
+			<arg>reccalcClass=${reccalc_calculator_class}</arg>
+			<arg>fileType=${source}</arg>
+			<arg>workflowId=${wf:id()}</arg>
+			<arg>workflowName=${workflow}</arg>
+			<arg>userName=${current_user}</arg>
+			<arg>workflowFailure=true</arg>
+			<arg>failedStep=${wf:lastErrorNode()}</arg>
+			<file>${path_custom_jar_lib}/prg1Common.jar</file>
+			<file>${path_hdfs_prg1_lib}/lib/itcore.jar</file>
+		</java>
+		<ok to="Failure_Notification"/>
+		<error to="Failure_Notification"/>
+	</action>
+
+	<action name="Failure_Notification">
+		<email xmlns="uri:oozie:email-action:0.1">
+			<to>${email_recipient}</to>
+			<subject>${email_subject_failure}</subject>
+			<body>The workflow prg1${project}_${workflow}_WF (${wf:id()})
+
+				Please check the following logs for further details:
+				From Internet Explorer (Hadoop Hue):
+				${log_viewer1}/${wf:id()}//
+				(Manually add the last '/' on the link above)
+				From FireFox (Hadoop Logs) with use of MIT Kerberos Ticket Manager:
+				${log_viewer2}/${wf:id()}?show=graph
+				${log_viewer3}/${wf:id()}
+				For more information on how to set-up MIT Kerberos for Windows Ticket
+				Manager:
+				click on http://www.NND.prdx.com/help/hadoop/odbc.html
+			</body>
+		</email>
+		<ok to="fail" />
+		<error to="fail" />
+	</action>
+
+	<kill name="fail">
+		<message>Hive failed, error
+			message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+	</kill>
+	<end name="end" />
+</workflow-app>

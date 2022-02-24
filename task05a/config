@@ -1,0 +1,9 @@
+Actual config file content:
+csv_seed_name and location: csv_seed_name.csv
+csv_scme-file_location: csv_schema_name.txt
+
+Possible data options:
+use_random_alphanumeric=Y
+use_numbers=N
+same_text=Y
+same_text_with 2-6 values like GLEWAK=Y

@@ -1,0 +1,84 @@
++------------------------------------+----------------------------------------------------+----------------------------------------------------+
+|              col_name              |                     data_type                      |                      comment                       |
++------------------------------------+----------------------------------------------------+----------------------------------------------------+
+| jcdtdr_sha_k                       | string                                             |                                                    |
+| jcdtdr_id_2                        | varchar(25)                                        |                                                    |
+| jcdtdr_partn_d_2                   | varchar(17)                                        |                                                    |
+| jcdtdr_doc_typ_x_2                 | varchar(20)                                        |                                                    |
+| jcdtdr_doc_ver_x_2                 | varchar(2)                                         |                                                    |
+| jcdtdr_vin_d_2                     | varchar(17)                                        |                                                    |
+| jcdtdr_dev_typ_x_2                 | varchar(8)                                         |                                                    |
+| jcdtdr_dev_d_2                     | varchar(10)                                        |                                                    |
+| jcdtdr_veh_rgn_c_2                 | varchar(2)                                         |                                                    |
+| jcdtdr_rtl_excl_x_2                | varchar(5)                                         |                                                    |
+| jcdtdr_nump_read_r_2               | double                                             |                                                    |
+| jcdtdr_veh_auth_stat_x_2           | varchar(16)                                        |                                                    |
+| jcdtdr_veh_auth_falur_stat_c_2     | int                                                |                                                    |
+| jcdtdr_veh_auth_modfd_on_s_2       | timestamp                                          |                                                    |
+| jcdtdr_lst_modfd_s_2               | timestamp                                          |                                                    |
+| jcdtdr_veh_auth_stat_chng_dtl_x_2  | struct<command_ID:string,command_Initiator:string,commandIssuedOn:timestamp,sourceAppId:string> |                                                    |
+| jcdtdr_users_x_2                   | array<struct<light_House_Id:string,userAuthorizationStatus:string,lastModified:timestamp,userType:string>> |                                                    |
+| jcdtdr_raw_payload_x               | string                                             |                                                    |
+| jcdtdr_proc_stat_c                 | string                                             |                                                    |
+| jcdtdr_proc_stat_dtl_x             | string                                             |                                                    |
+| jcdtdr_proc_stat_utc_s             | timestamp                                          |                                                    |
+| jcdtdr_created_on_s                | timestamp                                          |                                                    |
+| jcdtdr_created_by_c                | varchar(10)                                        |                                                    |
+|                                    | NULL                                               | NULL                                               |
+| # Partition Information            | NULL                                               | NULL                                               |
+| # col_name                         | data_type                                          | comment                                            |
+| jcdtdr_partition_vehicle_cntry_c   | string                                             |                                                    |
+|                                    | NULL                                               | NULL                                               |
+| # Detailed Table Information       | NULL                                               | NULL                                               |
+| Database:                          | prg1                                               | NULL                                               |
+| OwnerType:                         | USER                                               | NULL                                               |
+| Owner:                             | prg1devp                                           | NULL                                               |
+| CreateTime:                        | Fri Dec 18 10:04:52 EST 2020                       | NULL                                               |
+| LastAccessTime:                    | UNKNOWN                                            | NULL                                               |
+| Retention:                         | 0                                                  | NULL                                               |
+| Location:                          | hdfs://hdd3cluster/project/prg1/prg1DEV/buckst/barred/CVAS/History/njcdtdr_cvas_hist_pii_hte | NULL                                               |
+| Table Type:                        | EXTERNAL_TABLE                                     | NULL                                               |
+| Table Parameters:                  | NULL                                               | NULL                                               |
+|                                    | COLUMN_STATS_ACCURATE                              | {\"BASIC_STATS\":\"true\"}                         |
+|                                    | EXTERNAL                                           | TRUE                                               |
+|                                    | bucketing_version                                  | 2                                                  |
+|                                    | discover.partitions                                | true                                               |
+|                                    | numFiles                                           | 5                                                  |
+|                                    | numPartitions                                      | 5                                                  |
+|                                    | numRows                                            | 7                                                  |
+|                                    | orc.compress.size                                  | 8192                                               |
+|                                    | rawDataSize                                        | 22834                                              |
+|                                    | spark.sql.create.version                           | 2.2 or prior                                       |
+|                                    | spark.sql.sources.schema.numPartCols               | 1                                                  |
+|                                    | spark.sql.sources.schema.numParts                  | 1                                                  |
+|                                    | spark.sql.sources.schema.part.0                    | {\"type\":\"struct\",\"fields\":[{\"name\":\"jcdtdr_sha_k\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"jcdtdr_id_2
+\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\"varchar(25)\"}},{\"name\":\"jcdtdr_partn_d_2\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\"varchar(17)\"}},{\"name\":\"sc
+vpdr_doc_typ_x_2\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\"varchar(20)\"}},{\"name\":\"jcdtdr_doc_ver_x_2\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\"varchar(2)\"
+}},{\"name\":\"jcdtdr_vin_d_2\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\"varchar(17)\"}},{\"name\":\"jcdtdr_dev_typ_x_2\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\
+"varchar(8)\"}},{\"name\":\"jcdtdr_dev_d_2\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\"varchar(10)\"}},{\"name\":\"jcdtdr_veh_rgn_c_2\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TY
+PE_STRING\":\"varchar(2)\"}},{\"name\":\"jcdtdr_rtl_excl_x_2\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\"varchar(5)\"}},{\"name\":\"jcdtdr_nump_read_r_2\",\"type\":\"double\",\"nullable\":true,\"me
+tadata\":{}},{\"name\":\"jcdtdr_veh_auth_stat_x_2\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\"varchar(16)\"}},{\"name\":\"jcdtdr_veh_auth_falur_stat_c_2\",\"type\":\"integer\",\"nullable\":true,\"m
+etadata\":{}},{\"name\":\"jcdtdr_veh_auth_modfd_on_s_2\",\"type\":\"timestamp\",\"nullable\":true,\"metadata\":{}},{\"name\":\"jcdtdr_lst_modfd_s_2\",\"type\":\"timestamp\",\"nullable\":true,\"metadata\":{}},{\"name\":\"jcdtdr_veh
+_auth_stat_chng_dtl_x_2\",\"type\":{\"type\":\"struct\",\"fields\":[{\"name\":\"command_ID\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"command_Initiator\",\"type\":\"string\",\"nullable\":true,\"metadata\"
+:{}},{\"name\":\"commandIssuedOn\",\"type\":\"timestamp\",\"nullable\":true,\"metadata\":{}},{\"name\":\"sourceAppId\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}}]},\"nullable\":true,\"metadata\":{}},{\"name\":\"jcdtdr_
+users_x_2\",\"type\":{\"type\":\"array\",\"elementType\":{\"type\":\"struct\",\"fields\":[{\"name\":\"light_House_Id\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"userAuthorizationStatus\",\"type\":\"string\
+",\"nullable\":true,\"metadata\":{}},{\"name\":\"lastModified\",\"type\":\"timestamp\",\"nullable\":true,\"metadata\":{}},{\"name\":\"userType\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}}]},\"containsNull\":true},\"nul
+lable\":true,\"metadata\":{}},{\"name\":\"jcdtdr_raw_payload_x\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"jcdtdr_proc_stat_c\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"jcdtdr_pro
+c_stat_dtl_x\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"jcdtdr_proc_stat_utc_s\",\"type\":\"timestamp\",\"nullable\":true,\"metadata\":{}},{\"name\":\"jcdtdr_created_on_s\",\"type\":\"timestamp\",\"nullab
+le\":true,\"metadata\":{}},{\"name\":\"jcdtdr_created_by_c\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"HIVE_TYPE_STRING\":\"varchar(10)\"}},{\"name\":\"jcdtdr_partition_vehicle_cntry_c\",\"type\":\"string\",\"nullable\
+":true,\"metadata\":{}}]} |
+|                                    | spark.sql.sources.schema.partCol.0                 | jcdtdr_partition_vehicle_cntry_c                   |
+|                                    | totalSize                                          | 27371                                              |
+|                                    | transient_lastDdlTime                              | 1637269456                                         |
+|                                    | NULL                                               | NULL                                               |
+| # Storage Information              | NULL                                               | NULL                                               |
+| SerDe Library:                     | org.apache.hadoop.hive.ql.io.orc.OrcSerde          | NULL                                               |
+| InputFormat:                       | org.apache.hadoop.hive.ql.io.orc.OrcInputFormat    | NULL                                               |
+| OutputFormat:                      | org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat   | NULL                                               |
+| Compressed:                        | No                                                 | NULL                                               |
+| Num Buckets:                       | -1                                                 | NULL                                               |
+| Bucket Columns:                    | []                                                 | NULL                                               |
+| Sort Columns:                      | []                                                 | NULL                                               |
+| Storage Desc Params:               | NULL                                               | NULL                                               |
+|                                    | serialization.format                               | 1                                                  |
++------------------------------------+----------------------------------------------------+----------------------------------------------------+

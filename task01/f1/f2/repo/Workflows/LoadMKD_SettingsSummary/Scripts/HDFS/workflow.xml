@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="prg1${project}_${workflow}_WF">
+	<global>
+		<job-tracker>${job_tracker}</job-tracker>
+		<name-node>${name_node}</name-node>
+
+		<configuration>
+			<property>
+				<name>mapreduce.job.queuename</name>
+				<value>${oozie_queue_name}</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+				<value>true</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.task.classpath.user.precedence</name>
+				<value>true</value>
+			</property>
+			<property>
+                <name>oozie.launcher.mapreduce.map.memory.mb</name>
+                <value>32768</value>
+            </property>
+            <property>
+                <name>oozie.launcher.mapreduce.map.java.opts</name>
+                <value>-Xmx24576m</value>
+            </property>
+
+            <property>
+               <name>oozie.launcher.yarn.app.mapreduce.am.resource.mb</name>
+               <value>32768</value>
+            </property>
+            <property>
+               <name>oozie.launcher.yarn.app.mapreduce.am.command-opts</name>
+               <value>-Xmx24576m</value>
+            </property>
+		</configuration>
+	</global>
+	<credentials>
+			<credential name="hiveCredentials" type="hive2">
+			<property>
+				<name>hive2.jdbc.url</name>
+				<value>${hive_beeline_server}</value>
+			</property>
+			<property>
+				<name>hive2.server.principal</name>
+				<value>${hive_kerberos_principal}</value>
+			</property>
+		</credential>
+		</credentials>
+		
+	<start to="HistoryOrDailyLoadCheck" />
+	<decision name="HistoryOrDailyLoadCheck">
+        <switch>
+            <case to="Load_FNV2_History_To_tcx_Settings_Stage">${reload eq "yes"}</case>
+            <default to="Load_FNV2_Daily_To_tcx_Settings_Stage"/>
+        </switch>
+   	 </decision>
+	
+	<action name="Load_FNV2_History_To_tcx_Settings_Stage" cred="hiveCredentials">
+    <hive2 xmlns="uri:oozie:hive2-action:0.1">
+     <prepare>
+                <delete path="${path_hdfs_staging}/${staging_table}"/>
+                <mkdir path="${path_hdfs_staging}/${staging_table}"/>
+      </prepare>
+      <jdbc-url>${hive_beeline_server}</jdbc-url>
+      <script>${path_hdfs_workflow_root}/Reload_Staging.ql</script>
+        <param>db_name=${hive_database_name}</param>
+        <param>source_table=${history_table}</param>
+        <param>master_table=${master_table}</param>
+        <param>staging_table=${staging_table}</param>
+        <param>current_date=${current_date}</param>
+        <param>MKD_settings_query_days=${MKD_settings_query_days}</param>
+        <param>current_user=${kerberos_user_name}</param>
+    </hive2>
+	<ok to="Load_tcx_Settings_Stg_To_Master" />
+    <error to="fail" />
+	</action>
+
+	<action name="Load_FNV2_Daily_To_tcx_Settings_Stage" cred="hiveCredentials">
+    <hive2 xmlns="uri:oozie:hive2-action:0.1">
+     <prepare>
+                <delete path="${path_hdfs_staging}/${staging_table}"/>
+                <mkdir path="${path_hdfs_staging}/${staging_table}"/>
+      </prepare>
+      <jdbc-url>${hive_beeline_server}</jdbc-url>
+      <script>${path_hdfs_workflow_root}/Load_Staging.ql</script>
+        <param>db_name=${hive_database_name}</param>
+        <param>source_table=${daily_table}</param>
+        <param>master_table=${master_table}</param>
+        <param>staging_table=${staging_table}</param>
+        <param>current_date=${current_date}</param>
+        <param>MKD_settings_query_days=${MKD_settings_query_days}</param>
+        <param>current_user=${kerberos_user_name}</param>
+    </hive2>
+	<ok to="Load_tcx_Settings_Stg_To_Master" />
+    <error to="fail" />
+	</action>
+	
+	<action name="Load_tcx_Settings_Stg_To_Master" cred="hiveCredentials">
+     <hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_workflow_root}/Load_Master.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>master_table=${master_table}</param>
+			<param>staging_table=${staging_table}</param>
+			<param>current_user=${kerberos_user_name}</param>
+		    <file>${path_hdfs_workflow_root}/Load_Master.ql#Load_Master.ql</file>
+		</hive2>
+		<ok to="Capture_Success_reccalc" />
+		<error to="fail" />
+	</action>
+    
+  <action name="Capture_Success_reccalc" cred="hiveCredentials">
+    <hive2 xmlns="uri:oozie:hive2-action:0.1">
+      <jdbc-url>${hive_beeline_server}</jdbc-url>
+      <script>${path_hdfs_common_path}/${common_load_sucess_reccalc_script}</script>
+      <param>db_name=${hive_database_name}</param>
+      <param>masterTableNm=${master_table}</param>
+      <param>TableNm=${staging_table}</param>
+      <param>sourceTableNm=${history_table}</param>
+      <param>currentUser=${kerberos_user_name}</param>
+      <param>fileType=${reccalcFileType}</param>
+      <param>workflowId=${wf:id()}</param>
+      <param>workflowName=${workflow}</param>
+      <param>reccalcCol=${reccalc_col}</param>
+      <param>where=${where}</param>
+      <param>step_job_name=${wf:id()}_Capture_Success_reccalc</param>
+    </hive2>
+    <ok to="end" />
+    <error to="fail" />
+  </action>
+
+	<kill name="fail">
+        <message>Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    
+	<end name="end" />
+</workflow-app>

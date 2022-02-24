@@ -1,0 +1,91 @@
++----------------------------------+----------------------------------------------------+-----------------------------+
+|             col_name             |                     data_type                      |           comment           |
++----------------------------------+----------------------------------------------------+-----------------------------+
+| jcdtdo_sha_k                     | string                                             |                             |
+| jcdtdo_rec_d_2                   | bigint                                             |                             |
+| jcdtdo_rpt_y_2                   | date                                               |                             |
+| jcdtdo_mc_acct_d_2               | int                                                |                             |
+| jcdtdo_acct_n_2                  | varchar(40)                                        |                             |
+| jcdtdo_m2m_acct_n_2              | varchar(40)                                        |                             |
+| jcdtdo_m2m_plat_x_2              | varchar(40)                                        |                             |
+| jcdtdo_eiccid_x_2                | varchar(32)                                        |                             |
+| jcdtdo_iccid_x_2                 | varchar(20)                                        |                             |
+| jcdtdo_msisdn_x_2                | varchar(32)                                        |                             |
+| jcdtdo_imsi_x_2                  | varchar(15)                                        |                             |
+| jcdtdo_imei_r_2                  | bigint                                             |                             |
+| jcdtdo_tech_typ_x_2              | varchar(5)                                         |                             |
+| jcdtdo_sim_st_x_2                | varchar(40)                                        |                             |
+| jcdtdo_date_added_s_2            | timestamp                                          |                             |
+| jcdtdo_cust_x_2                  | varchar(100)                                       |                             |
+| jcdtdo_rate_pln_d_2              | int                                                |                             |
+| jcdtdo_rate_pln_n_2              | varchar(40)                                        |                             |
+| jcdtdo_init_actvn_y_2            | timestamp                                          |                             |
+| jcdtdo_apn_x_2                   | varchar(100)                                       |                             |
+| jcdtdo_comm_pln_d_2              | bigint                                             |                             |
+| jcdtdo_comm_pln_n_2              | varchar(100)                                       |                             |
+| jcdtdo_dev_d_2                   | varchar(50)                                        |                             |
+| jcdtdo_transx_d_2                 | varchar(50)                                        |                             |
+| jcdtdo_custom_fld1_x_2           | varchar(2000)                                      |                             |
+| jcdtdo_custom_fld2_x_2           | varchar(2000)                                      |                             |
+| jcdtdo_custom_fld3_x_2           | varchar(2000)                                      |                             |
+| jcdtdo_custom_fld4_x_2           | varchar(2000)                                      |                             |
+| jcdtdo_custom_fld5_x_2           | varchar(2000)                                      |                             |
+| jcdtdo_custom_fld6_x_2           | varchar(2000)                                      |                             |
+| jcdtdo_custom_fld7_x_2           | varchar(2000)                                      |                             |
+| jcdtdo_custom_fld8_x_2           | varchar(2000)                                      |                             |
+| jcdtdo_custom_fld9_x_2           | varchar(2000)                                      |                             |
+| jcdtdo_custom_fld10_x_2          | varchar(2000)                                      |                             |
+| jcdtdo_new_rec_ind_x_2           | varchar(1)                                         |                             |
+| jcdtdo_lst_pmt_stat_x_2          | varchar(2000)                                      |                             |
+| jcdtdo_lst_dta_conn_s_2          | timestamp                                          |                             |
+| jcdtdo_optr_ntwk_r_2             | bigint                                             |                             |
+| jcdtdo_latest_cntry_x_2          | varchar(40)                                        |                             |
+| jcdtdo_latest_carr_x_2           | varchar(40)                                        |                             |
+| jcdtdo_lst_dta_usd_r_2           | decimal(19,4)                                      |                             |
+| jcdtdo_lst_sms_usd_r_2           | int                                                |                             |
+| jcdtdo_file_n_2                  | varchar(100)                                       |                             |
+| jcdtdo_raw_payload_x             | string                                             |                             |
+| jcdtdo_proc_stat_c               | string                                             |                             |
+| jcdtdo_proc_stat_dtl_x           | string                                             |                             |
+| jcdtdo_proc_stat_utc_s           | timestamp                                          |                             |
+| jcdtdo_created_on_s              | timestamp                                          |                             |
+| jcdtdo_created_by_c              | varchar(10)                                        |                             |
+|                                  | NULL                                               | NULL                        |
+| # Partition Information          | NULL                                               | NULL                        |
+| # col_name                       | data_type                                          | comment                     |
+| jcdtdo_partition_m2m_account_id  | bigint                                             |                             |
+| jcdtdo_partition_report_date     | string                                             |                             |
+|                                  | NULL                                               | NULL                        |
+| # Detailed Table Information     | NULL                                               | NULL                        |
+| Database:                        | prg1                                               | NULL                        |
+| OwnerType:                       | USER                                               | NULL                        |
+| Owner:                           | prg1devp                                           | NULL                        |
+| CreateTime:                      | Mon Dec 21 21:42:04 EST 2020                       | NULL                        |
+| LastAccessTime:                  | UNKNOWN                                            | NULL                        |
+| Retention:                       | 0                                                  | NULL                        |
+| Location:                        | hdfs://hdd3cluster/project/prg1/prg1DEV/buckst/barred/EMSimBlngData/JasperReports/ICCID/njcdtdo_att_whsl_iccid_pii_hte | NULL                        |
+| Table Type:                      | EXTERNAL_TABLE                                     | NULL                        |
+| Table Parameters:                | NULL                                               | NULL                        |
+|                                  | COLUMN_STATS_ACCURATE                              | {\"BASIC_STATS\":\"true\"}  |
+|                                  | EXTERNAL                                           | TRUE                        |
+|                                  | bucketing_version                                  | 2                           |
+|                                  | discover.partitions                                | true                        |
+|                                  | numFiles                                           | 10                          |
+|                                  | numPartitions                                      | 7                           |
+|                                  | numRows                                            | 10                          |
+|                                  | orc.compress.size                                  | 8192                        |
+|                                  | rawDataSize                                        | 26269                       |
+|                                  | totalSize                                          | 53981                       |
+|                                  | transient_lastDdlTime                              | 1608604924                  |
+|                                  | NULL                                               | NULL                        |
+| # Storage Information            | NULL                                               | NULL                        |
+| SerDe Library:                   | org.apache.hadoop.hive.ql.io.orc.OrcSerde          | NULL                        |
+| InputFormat:                     | org.apache.hadoop.hive.ql.io.orc.OrcInputFormat    | NULL                        |
+| OutputFormat:                    | org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat   | NULL                        |
+| Compressed:                      | No                                                 | NULL                        |
+| Num Buckets:                     | -1                                                 | NULL                        |
+| Bucket Columns:                  | []                                                 | NULL                        |
+| Sort Columns:                    | []                                                 | NULL                        |
+| Storage Desc Params:             | NULL                                               | NULL                        |
+|                                  | serialization.format                               | 1                           |
++----------------------------------+----------------------------------------------------+-----------------------------+

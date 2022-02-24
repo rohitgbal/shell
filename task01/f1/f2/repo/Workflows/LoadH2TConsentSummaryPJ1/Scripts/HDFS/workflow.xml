@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="prg1${project}_${workflow}_WF">
+   
+   <global>
+		<job-tracker>${job_tracker}</job-tracker>
+		<name-node>${name_node}</name-node>
+		<configuration>
+			<property>
+				<name>mapreduce.job.queuename</name>
+				<value>${oozie_queue_name}</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+				<value>true</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.task.classpath.user.precedence</name>
+				<value>true</value>
+			</property>
+		</configuration>
+	</global>
+	
+	<credentials>
+		<credential name="hiveCredentials" type="hive2">
+			<property>
+				<name>hive2.jdbc.url</name>
+				<value>${hive_beeline_server}</value>
+			</property>
+			<property>
+				<name>hive2.server.principal</name>
+				<value>${hive_kerberos_principal}</value>
+			</property>
+		</credential>
+		<credential name="hbaseCredentials" type="hbase">
+		</credential>
+	</credentials>
+	
+	<start to="HistoryOrDailyLoadCheck" />
+	
+	<decision name="HistoryOrDailyLoadCheck">
+        <switch>
+            <case to="LoadH2T_Staging_HistoryLoad">${history_load eq "yes"}</case>
+            <default to="LoadH2T_Staging_DailyLoad"/>
+        </switch>
+   	 </decision>
+		
+	 <action name="LoadH2T_Staging_DailyLoad">
+        <shell xmlns="uri:oozie:shell-action:0.3">
+		    <prepare>
+				<delete path="${output}"/>
+				<mkdir path="${output}"/>
+			</prepare>
+			<exec>runH2T.sh</exec>
+			<argument>${spark_master}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_max_executors}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${spark_executor_cores}</argument>
+			<argument>${output}</argument>
+			<argument>${hive_database_name}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+			<argument>${kerberos_principal}</argument>
+            <argument>${current_user}</argument>
+            <argument>${lkb_days}</argument>
+            <argument>${source_k2_table}</argument>
+            <argument>${J9D_table}</argument>
+            <argument>${H2T_table}</argument>
+            <argument>${current_date}</argument>            			
+			<file>${path_hdfs_project}/runH2T.sh#runH2T.sh</file>
+			<file>${path_hdfs_project}/H2Ttransform.py#H2Ttransform.py</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</shell>
+		<ok to="Load_To_Master" />
+		<error to="Capture_Failure_reccalc" />
+    </action>
+    
+    <action name="LoadH2T_Staging_HistoryLoad">
+         <shell xmlns="uri:oozie:shell-action:0.3">
+		    <prepare>
+				<delete path="${output}"/>
+				<mkdir path="${output}"/>
+			</prepare>
+			<exec>runH2T.sh</exec>
+			<argument>${spark_master}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_max_executors}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${spark_executor_cores}</argument>
+			<argument>${output}</argument>
+			<argument>${hive_database_name}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+			<argument>${kerberos_principal}</argument>
+            <argument>${current_user}</argument>
+            <argument>${lkb_days}</argument>
+            <argument>${source_k2_table}</argument>
+            <argument>${J9D_table}</argument>
+            <argument>${H2T_table}</argument>			
+            <argument>${current_date}</argument>  
+			<file>${path_hdfs_project}/runH2T.sh#runH2T.sh</file>
+			<file>${path_hdfs_project}/H2Ttransform.py#H2Ttransform.py</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</shell>
+		<ok to="Load_To_Master" />
+		<error to="Capture_Failure_reccalc" />
+    </action> 
+    
+    
+   <!--  <action name="LoadH2T_Staging_DailyLoad" cred="hiveCredentials">
+                <hive2 xmlns="uri:oozie:hive2-action:0.1">
+                        <prepare>
+				        <delete path="${output}"/>
+				        <mkdir path="${output}"/>
+			            </prepare>
+			            <jdbc-url>${hive_beeline_server}</jdbc-url>
+                        <script>${path_hdfs_project}/loadToStaging.ql</script>
+						<param>db_name=${hive_database_name}</param>
+            			<param>lkb_days=${lkb_days}</param>	
+            			<param>raw_k2_table=${raw_k2_table}</param>
+            			<param>J9D_table=${J9D_table}</param>
+            			<param>H2T_table=${H2T_table}</param>	
+            			<param>current_date=${current_date}</param>
+            			<param>current_user=${current_user}</param>
+ 
+                </hive2>
+                <ok to="Load_To_Master" />
+		        <error to="Capture_Failure_reccalc" />
+        </action>
+    
+    
+    <action name="LoadH2T_Staging_HistoryLoad" cred="hiveCredentials">
+                <hive2 xmlns="uri:oozie:hive2-action:0.1">
+                        <prepare>
+				        <delete path="${output}"/>
+				        <mkdir path="${output}"/>
+			            </prepare>
+			            <jdbc-url>${hive_beeline_server}</jdbc-url>
+                        <script>${path_hdfs_project}/loadToStaging.ql</script>
+						<param>db_name=${hive_database_name}</param>
+            			<param>lkb_days=${lkb_days}</param>	
+            			<param>raw_k2_table=${raw_k2_table}</param>
+            			<param>J9D_table=${J9D_table}</param>
+            			<param>H2T_table=${H2T_table}</param>	
+            			<param>current_date=${current_date}</param>
+            			<param>current_user=${current_user}</param>
+ 
+                </hive2>
+                <ok to="Load_To_Master" />
+		        <error to="Capture_Failure_reccalc" />
+        </action>
+     -->
+    <action name="Load_To_Master" cred="hiveCredentials">
+                <hive2 xmlns="uri:oozie:hive2-action:0.1">
+                        <jdbc-url>${hive_beeline_server}</jdbc-url>
+                        <script>${path_hdfs_project}/loadToMaster.ql</script>
+						<param>db_name=${hive_database_name}</param>
+            			<param>lkb_days=${lkb_days}</param>	
+                </hive2>
+                <ok to="Capture_Success_reccalc" />
+		        <error to="Failure_Notification" />
+        </action>
+		
+	<action name="Capture_Success_reccalc" cred="hiveCredentials">
+                <hive2 xmlns="uri:oozie:hive2-action:0.1">
+                        <jdbc-url>${hive_beeline_server}</jdbc-url>
+                        <script>${path_hdfs_project}/success_reccalc.ql</script>
+						<param>db_name=${hive_database_name}</param>
+                        <param>current_user=${kerberos_user_name}</param>
+						<param>workflowId=${wf:id()}</param>
+						<param>workflowName=${workflow}</param>
+						<param>mstr_tbl=${mstr_tbl}</param>
+                </hive2>
+                <ok to="end" />
+		        <error to="Failure_Notification" />
+        </action>
+	
+	<action name="Capture_Failure_reccalc">
+		<java>
+			<main-class>${reccalc_driver_class}</main-class>
+			<java-opts>-Dsun.security.krb5.debug=true</java-opts>
+			<arg>reccalcClass=${reccalc_calculator_class}</arg>
+  			<arg>fileType=${reccalc_file_type}</arg>
+  			<arg>workflowId=${wf:id()}</arg>
+  			<arg>workflowName=${workflow}</arg>
+  			<arg>userName=${current_user}</arg>
+  			<arg>workflowFailure=True</arg>
+  			<arg>failedStep=${wf:lastErrorNode()}</arg>
+			<file>${path_custom_jar_lib}/prg1Common.jar#prg1Common.jar</file>
+			<file>${path_custom_jar_lib}/lib/itcore.jar#itcore.jar</file>
+			<file>${environment_hdfs_folder}/Workflow/KEYS/prg1_jaas.conf#prg1_jaas.conf</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>	                 
+		</java>
+		<ok to="Failure_Notification" />
+		<error to="Failure_Notification" />
+	</action>
+	
+	<action name="Failure_Notification">
+		<email xmlns="uri:oozie:email-action:0.1">
+			<to>${email_recipient}</to>
+			<subject>${email_subject_failure} ${wf:id()}</subject>
+			<body>The workflow prg1${project}_${workflow}_WF (${wf:id()}) 
+				Failed in the ${wf:lastErrorNode()} process.
+				
+				Please check the following logs for further details:
+				From Internet Explorer (Hadoop Hue): ${log_viewer1}/${wf:id()}// (Manually add the last '/' on the link above)
+
+				From FireFox (Hadoop Logs) with use of MIT Kerberos Ticket Manager:
+				${log_viewer2}/${wf:id()}?show=graph
+				${log_viewer3}/${wf:id()}
+
+				For more information on how to set-up MIT Kerberos for Windows Ticket
+				Manager:
+				click on http://www.NND.prdx.com/help/hadoop/odbc.html				
+			</body>
+		</email>
+		<ok to="fail"/>
+		<error to="fail"/>
+	</action>
+  
+  <kill name="fail">
+    <message>Script failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+  </kill>
+
+  <end name='end' />
+  
+</workflow-app>

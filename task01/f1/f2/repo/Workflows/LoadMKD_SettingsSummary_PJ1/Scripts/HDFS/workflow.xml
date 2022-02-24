@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="prg1${project}_${workflow}_WF">
+	<global>
+		<job-tracker>${job_tracker}</job-tracker>
+		<name-node>${name_node}</name-node>
+
+		<configuration>
+			<property>
+				<name>mapreduce.job.queuename</name>
+				<value>${oozie_queue_name}</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+				<value>true</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.task.classpath.user.precedence</name>
+				<value>true</value>
+			</property>
+			<property>
+                <name>oozie.launcher.mapreduce.map.memory.mb</name>
+                <value>32768</value>
+            </property>
+            <property>
+                <name>oozie.launcher.mapreduce.map.java.opts</name>
+                <value>-Xmx24576m</value>
+            </property>
+
+            <property>
+               <name>oozie.launcher.yarn.app.mapreduce.am.resource.mb</name>
+               <value>32768</value>
+            </property>
+            <property>
+               <name>oozie.launcher.yarn.app.mapreduce.am.command-opts</name>
+               <value>-Xmx24576m</value>
+            </property>
+		</configuration>
+	</global>
+	<credentials>
+			<credential name="hiveCredentials" type="hive2">
+			<property>
+				<name>hive2.jdbc.url</name>
+				<value>${hive_beeline_server}</value>
+			</property>
+			<property>
+				<name>hive2.server.principal</name>
+				<value>${hive_kerberos_principal}</value>
+			</property>
+		</credential>
+		</credentials>
+		
+	<start to="Load_PJ1_To_tcx_Settings_Stage" />
+
+	
+	<action name="Load_PJ1_To_tcx_Settings_Stage">
+			<shell xmlns="uri:oozie:shell-action:0.3">
+			<prepare>
+				<delete path="${name_node}${path_hdfs_staging}/nscvs87_tcx_setg_pj1_st_hte"/>
+				<mkdir path="${name_node}${path_hdfs_staging}/nscvs87_tcx_setg_pj1_st_hte"/>
+			</prepare>
+			<exec>MKDSettingsSummary.sh</exec>			
+			<argument>${hive_database_name}</argument>		
+			<argument>${spark_master}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_jars}</argument>
+			<argument>${spark_network_timeout}</argument>
+			<argument>${spark_ui_port}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_num_executors}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${oozie_queue_name}</argument>
+			<argument>${spark_sql_shuffle_partitions}</argument>
+			<argument>${spark_sql_orc_filterPushdown}</argument>
+			<argument>${spark_yarn_executor_memoryOverhead}</argument>
+			<argument>${spark_core_connection_ack_wait_timeout}</argument>
+			<argument>${spark_task_maxfailures}</argument>
+			<argument>${spark_shuffle_io_maxRetries}</argument>
+			<argument>${spark_dynamicalLocation_enabled}</argument>
+			<argument>${spark_sql_orc_enabled}</argument>
+			<argument>${spark_sql_hive_convertMetaStoreOrc}</argument>
+			<argument>${spark_sql_orc_char_enabled}</argument>			
+            <argument>${spark_files}</argument>
+			<argument>${kerberos_principal}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+		    <argument>${MKD_settings_query_days}</argument>
+			<argument>${hive_jars}</argument>
+			<argument>${py_spark_warehouse}</argument>
+			<argument>${current_date}</argument>
+			<argument>${output_staging_hdfs_path}</argument>
+			<argument>${llap_conecter_jar}</argument>
+			<argument>${llap_conecter_zip}</argument>
+			<argument>${hive_beeline_server}</argument>
+				
+			<file>${path_hdfs_workflow_root}/MKDSettingsSummary.sh#MKDSettingsSummary.sh</file>
+			<file>${path_hdfs_workflow_root}/MKDSettingsSummary.py#MKDSettingsSummary.py</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>	
+		</shell>
+
+		<ok to="Load_PJ1_tcx_Settings_Stg_To_Master" />
+		<error to="fail" />
+	</action>
+	
+	<action name="Load_PJ1_tcx_Settings_Stg_To_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_workflow_root}/Load_MasterMKDSettingsSummaryFromStg.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_user=${kerberos_user_name}</param>
+		    <file>${path_hdfs_workflow_root}/Load_MasterMKDSettingsSummaryFromStg.ql#Load_MasterMKDSettingsSummaryFromStg.ql</file>
+		</hive2>
+		<ok to="Capture_Success_reccalc" />
+		<error to="fail" />
+	</action>
+    
+  <action name="Capture_Success_reccalc" cred="hiveCredentials">
+    <hive2 xmlns="uri:oozie:hive2-action:0.1">
+      <jdbc-url>${hive_beeline_server}</jdbc-url>
+      <script>${path_hdfs_common_path}/${common_load_sucess_reccalc_script}</script>
+      <param>db_name=${hive_database_name}</param>
+      <param>masterTableNm=${master_table}</param>
+      <param>TableNm=${staging_table}</param>
+      <param>sourceTableNm=${source_table}</param>
+      <param>currentUser=${kerberos_user_name}</param>
+      <param>fileType=${reccalcFileType}</param>
+      <param>workflowId=${wf:id()}</param>
+      <param>workflowName=${workflow}</param>
+      <param>reccalcCol=${reccalc_col}</param>
+      <param>where=${where}</param>
+      <param>step_job_name=${wf:id()}_Capture_Success_reccalc</param>
+    </hive2>
+    <ok to="end" />
+    <error to="fail" />
+  </action>
+
+	<kill name="fail">
+        <message>Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    
+	<end name="end" />
+</workflow-app>

@@ -1,0 +1,8 @@
+0,Database,prg1
+1,OwnerType,USER
+2,Owner,prg1devp
+3,CreateTime,Tue#Dec#01#04:51:32#EST#2020
+4,LastAccessTime,UNKNOWN
+5,Retention,0
+6,Location,hdfs://hdd3cluster/project/prg1/prg1DEV/buckst/barred/storage/njcdt96_park_charge_final_id_pii_hte
+7,Table#Type,MANAGED_TABLE

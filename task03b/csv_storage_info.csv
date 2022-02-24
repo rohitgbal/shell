@@ -1,0 +1,5 @@
+0,SerDe#Library,org.apache.hadoop.hive.ql.io.orc.OrcSerde
+1,InputFormat,org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+2,OutputFormat,org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+3,Compressed,No
+4,Num#Buckets,10

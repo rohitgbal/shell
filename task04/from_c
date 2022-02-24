@@ -1,0 +1,60 @@
+with abc
+with qry as (select count(cvdsvt_partition_date_x) as cnt from ${stg_table_name})
+       "Ntblx01_fcproc_MSG_ACID_SEC_HTE,Ntblx01_fcproc_MSG_SEC_EU_HTE,NCVDC60_VHA_VEH_SEC_HTE" as prg2_src_tbl_n from qry;
+(select cvdsvt_msg_metadata_msg_n,cvdcvt_msg_metadata_msg_n from  ${hivevar:monitoring_staging} stg_table
+with qry as (select count(cvdsvt_partition_date_x) as cnt from ncvdsvt_AXT_summary_pj1_st_hte)
+       "Ntblx01_CRC4T_MSG_PJ1_SEC_HTE" as prg2_src_tbl_n from qry;
+(select cvdsvt_msg_metadata_msg_n,cvdcvt_msg_metadata_msg_n from  ${hivevar:monitoring_staging} stg_table
+,cvdsvt_partition_date_x from ncvdsvt_AXT_summary_pj1_st_hte where cvdsvt_partition_date_x >= date_sub(current_date, ${hivevar:lkb_days});
+(select cvdsvt_msg_metadata_msg_n,cvdcvt_msg_metadata_msg_n from  ${hivevar:monitoring_staging} stg_table
+with qry as(select count(scvpfy_vin_d_3) as cnt from NSCVPFY_tcx_SCHED_HIST_PII_HTE where to_date(scvpfy_created_on_s)  = current_date)
+       from qry;
+with qry as(select count(tblx01_vin_d_3) as cnt from NSCVP95_tcx_SCHED_HIST_PJ1_PII_HTE where to_date(tblx01_created_on_s)  = current_date)
+       from qry;
+with qry as (select count(partition_date) as cnt from ${stg_table})
+       "${raw_k2_table},${raw_k2_prs_table},${raw_k2_psa_table},${raw_k2_psu_table}" as prg2_src_tbl_n from qry;
+    from ${hivevar:raw_table}
+SELECT * from ${hivevar:stg_table};
+    from ${hivevar:pj1_k2_table}
+ from (select scvpbb_vin_d_2,
+   from ${hivevar:mstr_table}
+ from ${hivevar:mstr_table} c lateral view explode(c.scvpbb_consent_seq_d_2) seqTable as scvpbb_consent_seq_id_2
+ from ${hivevar:mstr_table} a
+    from ${hivevar:raw_table}
+with qry as (select count(partition_date_x) as cnt from ${stg_table})
+       "${pj1_k2_table}" as prg2_src_tbl_n from qry;
+SELECT * from ${hivevar:stg_table} WHERE
+ from (select scvp99_vin_d_2,
+       from ${hivevar:mstr_na_non_usa_table}
+       from ${hivevar:mstr_na_non_usa_table} c lateral view explode(c.scvp99_consent_seq_d_2) seqTable as scvp99_consent_seq_id_2
+       from ${hivevar:mstr_na_non_usa_table} a
+  from (select scvp99_vin_d_2,
+        from ${hivevar:mstr_eu_gbr_fra_table}
+        from ${hivevar:mstr_eu_gbr_fra_table} c lateral view explode(c.scvp99_consent_seq_d_2) seqTable as scvp99_consent_seq_id_2
+        from ${hivevar:mstr_eu_gbr_fra_table} a
+    from (select scvp99_vin_d_2,
+          from ${hivevar:mstr_ap_table}
+          from ${hivevar:mstr_ap_table} c lateral view explode(c.scvp99_consent_seq_d_2) seqTable as scvp99_consent_seq_id_2
+          from ${hivevar:mstr_ap_table} a
+    from (select scvp99_vin_d_2,
+          from ${hivevar:mstr_rw_table}
+          from ${hivevar:mstr_rw_table} c lateral view explode(c.scvp99_consent_seq_d_2) seqTable as scvp99_consent_seq_id_2
+          from ${hivevar:mstr_rw_table} a
+     from ${hivevar:pj1_k2_table}
+with qry as (select count(partition_date_x) as cnt from NSCVSBB_H2T_SUMM_PJ1_ST_HTE)
+       "ntblx01_CRC4T_msg_pj1_sec_hte,nscvc92_J9D_pj1_sec_hte" as prg2_src_tbl_n from qry;
+with qry as (select count(partition_date) as cnt from ${stg_table})
+       "${temp_stg_table},${stg_table}" as prg2_src_tbl_n from qry;
+SELECT * from ${hivevar:stg_table};
+SELECT * from ${hivevar:stg_table};
+with qry as (select count(partition_date) as cnt from ${stg_table_name})
+       "Ntblx01_fcproc_MSG_ACID_SEC_HTE,Ntblx01_fcproc_MSG_SEC_EU_HTE,NCVDC60_VHA_VEH_SEC_HTE" as prg2_src_tbl_n from qry;
+  FROM NCVDC60_VHA_VEH_SEC_HTE
+SELECT * from ${hivevar:stg_table_name} where partition_date >= date_sub('${current_date}', ${hivevar:lkb_days});
+with qry as (select count(partition_date) as cnt from NCVDSX8_WIL_SUMM_PJ1_ST_HTE)
+       "Ntblx01_CRC4T_MSG_PJ1_SEC_HTE" as prg2_src_tbl_n from qry;
+SELECT * from NCVDSX8_WIL_SUMM_PJ1_ST_HTE;
+with qry as (select count(partition_date) as cnt from ${stg_table_name})
+       "Ntblx01_fcproc_MSG_ACID_SEC_HTE,Ntblx01_fcproc_MSG_SEC_EU_HTE,NCVDC60_VHA_VEH_SEC_HTE" as prg2_src_tbl_n from qry;
+  FROM NCVDC60_VHA_VEH_SEC_HTE
+SELECT * from ${hivevar:stg_table_name} where partition_date >= date_sub('${current_date}', ${hivevar:lkb_days});

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# create directories/filesystem for Hive tables
+hdfs dfs -mkdir /project/prg1/prg1${env}/Warehouse/Secure/PaceTransformation
+
+
+
+# set the permissions for Master tables
+hdfs dfs -chmod 700 /project/prg1/prg1${env}/Warehouse/Secure/PaceTransformation

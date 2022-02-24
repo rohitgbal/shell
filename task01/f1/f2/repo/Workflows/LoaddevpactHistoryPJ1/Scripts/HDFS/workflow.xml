@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="prg1${project}_${workflow}_WF">
+	<global>
+		<job-tracker>${job_tracker}</job-tracker>
+		<name-node>${name_node}</name-node>
+
+		<configuration>
+			<property>
+				<name>mapreduce.job.queuename</name>
+				<value>${oozie_queue_name}</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+				<value>true</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.task.classpath.user.precedence</name>
+				<value>true</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.map.memory.mb</name>
+				<value>32768</value>
+			</property>
+			<property>
+				<name>oozie.launcher.mapreduce.map.java.opts</name>
+				<value>-Xmx24576m</value>
+			</property>
+
+			<property>
+				<name>oozie.launcher.yarn.app.mapreduce.am.resource.mb</name>
+				<value>32768</value>
+			</property>
+			<property>
+				<name>oozie.launcher.yarn.app.mapreduce.am.command-opts</name>
+				<value>-Xmx24576m</value>
+			</property>
+		</configuration>
+	</global>
+	<credentials>
+		<credential name="hiveCredentials" type="hive2">
+			<property>
+				<name>hive2.jdbc.url</name>
+				<value>${hive_beeline_server}</value>
+			</property>
+			<property>
+				<name>hive2.server.principal</name>
+				<value>${hive_kerberos_principal}</value>
+			</property>
+		</credential>
+	</credentials>
+	<start to="HistoryLoad_Check" />
+
+	<!-- To check the Historical Load -->
+	<decision name="HistoryLoad_Check">
+		<switch>
+			<case to="LoaddevpactHistoryPJ1_Stage"> ${Incremental eq "false"} </case>
+			<default to="LoaddevpactHistoryPJ1_Move_to_Inprocess" />
+		</switch>
+	</decision>
+
+	<!-- Move files from Input MKD folder to Inprocess Folder -->
+	<action name="LoaddevpactHistoryPJ1_Move_to_Inprocess">
+		<java>
+			<prepare>
+				<delete path="${name_node}${raw_inprocess_location}"/>
+				<mkdir path="${name_node}${raw_inprocess_location}"/>
+			</prepare>
+			<main-class>${hdfs_mass_move_class}</main-class>
+			<java-opts>-Dsun.security.krb5.debug=true</java-opts>
+			<arg>${raw_input_location}/</arg>
+			<arg>${raw_inprocess_location}/</arg>
+			<file>${path_hdfs_prg1_lib}/prg1Common.jar#prg1Common.jar</file>
+			<file>${path_hdfs_prg1_lib}/lib/itcore.jar#itcore.jar</file>
+			<file>${environment_hdfs_folder}/Workflow/KEYS/prg1_jaas.conf#prg1_jaas.conf</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</java>
+		<ok to="LoaddevpactHistoryPJ1_Stage"/>
+		<error to="LoaddevpactHistoryPJ1_Stage"/>
+	</action>
+
+	<!-- Move files from Inprocess Folder to staging table -->
+	<action name="LoaddevpactHistoryPJ1_Stage">
+		<shell xmlns="uri:oozie:shell-action:0.3">
+			<prepare>
+				<delete path="${name_node}${path_hdfs_staging}/nscvs95_tcx_hist_pj1_st_hte"/>
+				<mkdir path="${name_node}${path_hdfs_staging}/nscvs95_tcx_hist_pj1_st_hte"/>
+			</prepare>
+			<exec>devpactHistory.sh</exec>
+			<argument>${hive_database_name}</argument>
+			<argument>${raw_input_location}/</argument>
+			<argument>${raw_inprocess_location}/</argument>
+			<argument>${source_history_table}</argument>
+			<argument>${output_staging_hdfs_path}/</argument>
+			<argument>${spark_master}</argument>
+			<argument>${spark_deploy_mode}</argument>
+			<argument>${spark_jars}</argument>
+			<argument>${spark_network_timeout}</argument>
+			<argument>${spark_ui_port}</argument>
+			<argument>${spark_driver_memory}</argument>
+			<argument>${spark_num_executors}</argument>
+			<argument>${spark_executor_memory}</argument>
+			<argument>${oozie_queue_name}</argument>
+			<argument>${spark_sql_shuffle_partitions}</argument>
+			<argument>${spark_sql_orc_filterPushdown}</argument>
+			<argument>${spark_yarn_executor_memoryOverhead}</argument>
+			<argument>${spark_core_connection_ack_wait_timeout}</argument>
+			<argument>${spark_task_maxfailures}</argument>
+			<argument>${spark_shuffle_io_maxRetries}</argument>
+			<argument>${spark_dynamicalLocation_enabled}</argument>
+			<argument>${spark_sql_orc_enabled}</argument>
+			<argument>${spark_sql_hive_convertMetaStoreOrc}</argument>
+			<argument>${spark_sql_orc_char_enabled}</argument>
+			<argument>${spark_files}</argument>
+			<argument>${kerberos_principal}</argument>
+			<argument>${kerberos_keytab_filename}</argument>
+			<argument>${Incremental}</argument>
+			<argument>${current_user}</argument>
+			<argument>${json_jar1}</argument>
+			<argument>${json_jar2}</argument>
+			<argument>${MKD_schedule_query_days}</argument>
+			<argument>${current_date}</argument>
+			<file>${path_hdfs_workflow_root}/devpactHistory.sh#devpactHistory.sh</file>
+			<file>${path_hdfs_workflow_root}/devpactHistory.py#devpactHistory.py</file>
+			<file>${kerberos_keytab_file}#${kerberos_keytab_filename}</file>
+		</shell>
+
+		<ok to="LoaddevpactHistoryPJ1_Stg_To_Master" />
+		<error to="fail" />
+	</action>
+
+	<!-- Load devpact Master table -->
+	<action name="LoaddevpactHistoryPJ1_Stg_To_Master" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_workflow_root}/LoadMasterdevpactHistory.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>current_user=${kerberos_user_name}</param>
+			<file>${path_hdfs_workflow_root}/LoadMasterdevpactHistory.ql#LoadMasterdevpactHistory.ql</file>
+		</hive2>
+		<ok to="Capture_Success_reccalc_Schedule" />
+		<error to="fail" />
+	</action>
+
+	<!-- Success reccalc for devpact -->
+	<action name="Capture_Success_reccalc_Schedule" cred="hiveCredentials">
+		<hive2 xmlns="uri:oozie:hive2-action:0.1">
+			<jdbc-url>${hive_beeline_server}</jdbc-url>
+			<script>${path_hdfs_workflow_root}/success_reccalc.ql</script>
+			<param>db_name=${hive_database_name}</param>
+			<param>masterTableNm=${master_table_devpact}</param>
+			<param>TableNm=${staging_table}</param>
+			<param>sourceTableNm=${raw_input_location}</param>
+			<param>currentUser=${kerberos_user_name}</param>
+			<param>fileType=${reccalcFileTypeschedule}</param>
+			<param>workflowId=${wf:id()}</param>
+			<param>workflowName=${workflow}</param>
+			<param>step_job_name=${wf:id()}_Capture_Success_reccalc</param>
+		</hive2>
+		<ok to="end" />
+		<error to="fail" />
+	</action>
+
+	<kill name="fail">
+		<message>Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+	</kill>
+
+	<end name="end" />
+</workflow-app>
