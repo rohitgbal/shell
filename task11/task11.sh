@@ -14,7 +14,35 @@ repo=$1
 wflow=$2
 #Creating Path
 path="${root_d}/${repo}/Workflows/${wflow}"
-echo $1 $2 $exts
+for ext in $exts
+do
+p_files=$(find "${path}/Properties/" -type f -name "*.prop")
+for p_file in $p_files
+do
+lines=$(grep ${ext} $p_file)
+#Loop throgh all lines contains extension
+for line in $lines
+do
+# Check File exists
+if [ -e "$line" ]
+then
+while((1))
+do
+f_loc=$(echo $line | rev | cut -d "/" -f 2- | rev )
+file=$(echo $line | rev | cut -d "/" -f 1 | rev )
+line=$(find . -name "${file}" -printf "%l\n")
+l_loc=$(pwd)"/"$(echo $line | rev | cut -d "/" -f 2- | rev )
+link=$(echo $line | rev | cut -d "/" -f 1 | rev )
+echo $i,$file,$link,$f_loc,$l_loc
+if [ -z "$line" ]
+then
+break;
+fi
+done # while loop
+fi
+done
+done
+done
 }
 
 

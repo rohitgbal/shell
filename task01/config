@@ -1,2 +1,6 @@
 rootfolder:f1/f2
 outputfolder:out
+###EXTSTART###
+xml
+txt
+###EXTEND###
