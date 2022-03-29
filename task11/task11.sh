@@ -26,14 +26,15 @@ do
 # Check File exists
 if [ -e "$line" ]
 then
+i=0;
 while((1))
 do
+((i++))
 f_loc=$(echo $line | rev | cut -d "/" -f 2- | rev )
 file=$(echo $line | rev | cut -d "/" -f 1 | rev )
 line=$(find . -name "${file}" -printf "%l\n")
-l_loc=$(pwd)"/"$(echo $line | rev | cut -d "/" -f 2- | rev )
-link=$(echo $line | rev | cut -d "/" -f 1 | rev )
-echo $i,$file,$link,$f_loc,$l_loc
+p_file=$(echo $p_file | rev | cut -d "/" -f 1 | rev)
+echo $repo,$wflow,$p_file,$i,$file,$f_loc
 if [ -z "$line" ]
 then
 break;
